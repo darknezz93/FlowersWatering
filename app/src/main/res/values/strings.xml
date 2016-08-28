@@ -1,14 +1,18 @@
 <resources>
-    <string name="app_name">CriminalIntent</string>
+    <string name="app_name">Thirsty flower</string>
     <string name="action_settings">Settings</string>
-    <string name="crime_title_hint">Enter a title for the crime.</string>
-    <string name="crime_title_label">Title</string>
+    <string name="flower_name_hint">Enter a flower name</string>
+    <string name="flower_name_label">Name</string>
     <string name="crime_details_label">Details</string>
-    <string name="crime_solved_label">Solved</string>
-    <string name="date_picker_title">Date of crime:</string>
+    <string name="flower_notification_label">Notification</string>
+    <string name="date_picker_title">Date of flower:</string>
     <string name="show_subtitle">Show Subtitle</string>
     <string name="hide_subtitle">Hide Subtitle</string>
-    <string name="subtitle_format">%1$s crimes</string>
-    <string name="new_crime">New crime</string>
-    <string name="delete_crime">Delete crime</string>
+    <string name="subtitle_format">%1$s flowers</string>
+    <string name="new_crime">New flower</string>
+    <string name="set_localization">Set localization</string>
+    <string name="delete_crime">Delete flower</string>
+    <string name="start_date_details_label">Start date:</string>
+    <string name="notification_date_details_label">The closet notification date:</string>
+    <string name="days_details_label">Days period:</string>
 </resources>

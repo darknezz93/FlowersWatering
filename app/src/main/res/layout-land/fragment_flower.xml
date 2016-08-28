@@ -6,13 +6,13 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/crime_title_label"
+        android:text="@string/flower_name_label"
         style="?android:listSeparatorTextViewStyle"
         />
-    <EditText android:id="@+id/crime_title"
+    <EditText android:id="@+id/flower_name"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:hint="@string/crime_title_hint"
+              android:hint="@string/flower_name_hint"
               />
     <TextView
         android:layout_width="match_parent"
@@ -28,15 +28,15 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp">
 
-        <Button android:id="@+id/crime_date"
+        <Button android:id="@+id/start_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"/>
 
-        <CheckBox android:id="@+id/crime_solved"
+        <CheckBox android:id="@+id/flower_notification"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:text="@string/crime_solved_label"
+                  android:text="@string/flower_notification_label"
                   android:layout_weight="1"/>
     </LinearLayout>
 
