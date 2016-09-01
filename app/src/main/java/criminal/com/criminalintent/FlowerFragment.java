@@ -147,6 +147,11 @@ public class FlowerFragment extends Fragment {
                         .newInstance(mFlower.getStartDate());
                 dialog.setTargetFragment(FlowerFragment.this, REQUEST_DATE);
                 dialog.show(manager, DIALOG_DATE);
+                try {
+                    mFlower.setStartDate(parseDate(mStartDateButton.getText().toString(), "yyyy-MM-dd"));
+                } catch(ParseException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -173,15 +178,15 @@ public class FlowerFragment extends Fragment {
                     if(Integer.valueOf(mDaysField.getText().toString()) > 0) {
                         mFlower.setEndDate(addDays(mFlower.getStartDate(), Integer.valueOf(String.valueOf(mDaysField.getText()))));
                         mEndDateButton.setText(dateFormat.format("yyyy-MM-dd", mFlower.getEndDate()));
+                        mNotificationCheckBox.setEnabled(true);
                     } else {
-                        mNotificationCheckBox.setEnabled(false);
                         mNotificationCheckBox.setChecked(false);
+                        mNotificationCheckBox.setEnabled(false);
                     }
-                    mNotificationCheckBox.setEnabled(true);
                 } else if(!validateNumber(mDaysField.getText().toString())) {
                     mFlower.setEndDate(null);
-                    mNotificationCheckBox.setEnabled(false);
-                    mNotificationCheckBox.setChecked(false);
+                   // mNotificationCheckBox.setEnabled(false);
+                   // mNotificationCheckBox.setChecked(false);
                     mEndDateButton.setText("Fill start date and days fields.");
                 }
             }
@@ -269,20 +274,20 @@ public class FlowerFragment extends Fragment {
     public static Date addDays(Date date, int days)
     {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Calendar cal = Calendar.getInstance();
-        try {
-            cal.setTime(sdf.parse(date.toString()));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        cal.add(Calendar.DATE, days); //minus number would decrement the days
-        return cal.getTime();
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        c.add(Calendar.DATE, days);
+        return c.getTime();
     }
 
     public static boolean validateNumber(String number) {
         return number.matches("^-?\\d+$");
     }
 
-
+    private Date parseDate(String date, String format) throws ParseException
+    {
+        SimpleDateFormat formatter = new SimpleDateFormat(format);
+        return formatter.parse(date);
+    }
 
 }

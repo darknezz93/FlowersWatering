@@ -88,6 +88,23 @@ public class FlowerLab {
         }
     }
 
+    public List<Flower> getNotificationFlowers() {
+        List<Flower> flowers = new ArrayList<>();
+        FlowerCursorWrapper cursor = (FlowerCursorWrapper) queryNotificationFlowers();
+
+        try {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                flowers.add(cursor.getFlower());
+                cursor.moveToNext();
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return flowers;
+    }
+
     public void updateFlower(Flower flower) {
         String uuidString = flower.getId().toString();
         ContentValues values = getContentValues(flower);
@@ -124,6 +141,11 @@ public class FlowerLab {
                 null  // orderBy
         );
 
+        return new FlowerCursorWrapper(cursor);
+    }
+
+    private Cursor queryNotificationFlowers() {
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM flowers WHERE NOTIFICATION=1", null);
         return new FlowerCursorWrapper(cursor);
     }
 

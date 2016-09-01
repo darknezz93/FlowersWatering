@@ -33,6 +33,7 @@
             android:label="@string/app_name"
             android:parentActivityName=".FlowerListActivity">
         </activity>
+        <service android:name="backgroundService.NotificationService" />
     </application>
 
 </manifest>

@@ -31,6 +31,8 @@ import com.google.android.gms.location.places.ui.PlacePicker;
 import java.util.List;
 import java.util.Locale;
 
+import backgroundService.NotificationService;
+
 /**
  * Created by adam on 09.08.16.
  */
@@ -97,6 +99,8 @@ public class FlowerListFragment extends Fragment {
             mAdapter.notifyDataSetChanged();
         }
 
+        NotificationService.setServiceAlarm(getActivity(), true);
+
         updateSubtitle();
 
     }
@@ -112,9 +116,6 @@ public class FlowerListFragment extends Fragment {
                 startActivity(intent);
                 return true;
             case R.id.menu_item_set_localization:
-                /*
-                TODO dodac implementacje wyboru miejsca na mapie i zapisac do bazy danych
-                 */
                 PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
 
                 try {
@@ -144,7 +145,6 @@ public class FlowerListFragment extends Fragment {
                 Localization localization = new Localization(latitude,longitude);
                 localization.setId(1);
                 localizationLab.addLocalization(localization);
-                List<Localization>  localizations = localizationLab.getLocalizations();
 
                 Toast.makeText(getActivity(), toastMsg, Toast.LENGTH_LONG).show();
             }

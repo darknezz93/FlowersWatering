@@ -7,11 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
-import database.FlowerBaseHelper;
-import database.FlowerCursorWrapper;
-import database.FlowerDbSchema;
 import database.LocalizationBaseHelper;
 import database.LocalizationCursorWrapper;
 import database.LocalizationDbDchema;
@@ -39,8 +35,8 @@ public class LocalizationLab {
     }
 
     public void addLocalization(Localization localization) {
-        Localization locale = getLocalization(localization.getId());
-        if(locale != null) {
+        List<Localization> localizations = getLocalizations();
+        if(localizations.size() > 0) {
             updateLocalization(localization);
         } else {
             ContentValues values = getContentValues(localization);
@@ -99,8 +95,8 @@ public class LocalizationLab {
         ContentValues values = getContentValues(localization);
 
         mDatabase.update(LocalizationDbDchema.LocalizationTable.NAME, values,
-                LocalizationDbDchema.LocalizationTable.Cols.UUID + " = ?",
-                new String[]{uuidString});
+                LocalizationDbDchema.LocalizationTable.Cols.UUID + " = 1",
+                null);
     }
 
     private static ContentValues getContentValues(Localization localization) {
