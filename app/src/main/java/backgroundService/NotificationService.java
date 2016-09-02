@@ -38,7 +38,7 @@ public class NotificationService extends IntentService {
     private static final String TAG = "NotificationService";
     private static boolean isNotificationSend = true;
 
-    private static final int CHECK_INTERVAL =/* 1000 * 20; */1000 * 60 * 15; // 60 seconds *10 //sprawdzanie co 15 min
+    private static final int CHECK_INTERVAL = 1000 * 20; //1000 * 60 * 15; // 60 seconds *10 //sprawdzanie co 15 min
 
     public static Intent newIntent(Context context) {
         return new Intent(context, NotificationService.class);
@@ -72,6 +72,7 @@ public class NotificationService extends IntentService {
                                 performNotification(id, flower);
                                 id++;
                                 isNotificationSend = true;
+                                updateFlower(flower);
                             }
                         }
                     }
@@ -80,12 +81,28 @@ public class NotificationService extends IntentService {
         }
     }
 
+    private void updateFlower(Flower flower) {
+        flower.setStartDate(flower.getEndDate());
+        flower.setEndDate(addDays(flower.getStartDate(), Integer.valueOf(String.valueOf(flower.getDays()))));
+        FlowerLab.get(this).updateFlower(flower);
+    }
+    public static Date addDays(Date date, int days)
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        c.add(Calendar.DATE, days);
+        return c.getTime();
+    }
+
+
     private void performNotification(Integer id, Flower flower) {
         Intent intent = new Intent(this, FlowerListActivity.class);
         PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setContentTitle("Your plant needs water").setContentText(flower.getName())
                 .setContentIntent(pIntent)
+                .setAutoCancel(true)
                 .setSmallIcon(R.drawable.ic_menu_add).getNotification();
 
         NotificationManager notificationManager =

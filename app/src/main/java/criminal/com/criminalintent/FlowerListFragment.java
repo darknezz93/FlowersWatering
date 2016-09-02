@@ -1,9 +1,7 @@
 package criminal.com.criminalintent;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -27,9 +25,10 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 
-
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 import backgroundService.NotificationService;
 
@@ -185,8 +184,17 @@ public class FlowerListFragment extends Fragment {
             mNotificationCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    // Set the crime's solved property
+                    final DateFormat dateFormat = new DateFormat();
                     mFlower.setNotification(isChecked);
+
+                    if(!isChecked) {
+                        mEndDateTextView.setText("No pending notification.");
+                        mFlower.setEndDate(null);
+                        FlowerLab.get(getActivity()).updateFlower(mFlower);
+                    } else {
+                        mFlower.setEndDate(addDays(mFlower.getStartDate(), Integer.valueOf(String.valueOf(mFlower.getDays()))));
+                        mEndDateTextView.setText(dateFormat.format("yyyy-MM-dd", mFlower.getEndDate()));
+                    }
                     FlowerLab.get(getActivity()).updateFlower(mFlower);
                 }
             });
@@ -213,6 +221,15 @@ public class FlowerListFragment extends Fragment {
             Intent intent = FlowerPagerActivity.newIntent(getActivity(), mFlower.getId());
             startActivity(intent);
         }
+    }
+
+    public static Date addDays(Date date, int days)
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        c.add(Calendar.DATE, days);
+        return c.getTime();
     }
 
 
