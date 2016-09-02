@@ -3,6 +3,8 @@ package backgroundService;
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -23,8 +25,10 @@ import java.util.Locale;
 
 import criminal.com.criminalintent.Flower;
 import criminal.com.criminalintent.FlowerLab;
+import criminal.com.criminalintent.FlowerListActivity;
 import criminal.com.criminalintent.Localization;
 import criminal.com.criminalintent.LocalizationLab;
+import criminal.com.criminalintent.R;
 
 /**
  * Created by adam on 29.08.16.
@@ -32,10 +36,9 @@ import criminal.com.criminalintent.LocalizationLab;
 public class NotificationService extends IntentService {
 
     private static final String TAG = "NotificationService";
-    private static boolean isNotificationSend = false;
+    private static boolean isNotificationSend = true;
 
-    private static final int CHECK_INTERVAL = /*1000 * 20;*/  1000 * 60 * 15; // 60 seconds *10 //sprawdzanie co 10 min
-
+    private static final int CHECK_INTERVAL =/* 1000 * 20; */1000 * 60 * 15; // 60 seconds *10 //sprawdzanie co 15 min
 
     public static Intent newIntent(Context context) {
         return new Intent(context, NotificationService.class);
@@ -52,33 +55,44 @@ public class NotificationService extends IntentService {
         Date currentDate = new Date();
         LocalizationLab localizationLab = LocalizationLab.get(this);
 
+        if(checkHour(new Date(), "01:00:00", "02:00:00")) {
+            isNotificationSend = false;
+        }
 
         List<Flower> flowers = FlowerLab.get(this).getNotificationFlowers();
         if (flowers.size() > 0 && !isNotificationSend) {
+            int id = 0;
             for (Flower flower : flowers) {
                 if (removeTime(flower.getEndDate()).equals(removeTime(currentDate))) {
-                    if (checkHour(currentDate)) {
+                    if (checkHour(currentDate, "09:00:00", "21:00:00")) {
                         List<Localization> loc = localizationLab.getLocalizations();
                         Localization localization = loc.get(0);
                         if(localization != null) {
                             if(checkLocalization(localization.getLatitude(), localization.getLongitude())) {
-                                String dupa = "dupa";
+                                performNotification(id, flower);
+                                id++;
+                                isNotificationSend = true;
                             }
                         }
                     }
                 }
             }
         }
+    }
 
-        /*
-        TODO: Co 10 min zbierac kwiaty które maja dostac powiadomienie.
-        TODO: Jeśli jest miedzy 10 a 18 to wtedy wysyłane jest powiadomienie
-        TODO: Wysłane dla danego kwiata powiadomienie oznaczane jest odpowiednia flagą ( aby nie powtarzac )
-        TODO: Warunkiem wyslania powiadomienia jest:
-        TODO:  - godzina miedzy 10 a 20
-        TODO:  - odpowiednia flaga
-        TODO:  - bycie na liscie kwiatów wycznaczonych do podlewania w danym dniu
-         */
+    private void performNotification(Integer id, Flower flower) {
+        Intent intent = new Intent(this, FlowerListActivity.class);
+        PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
+        Notification notification = new Notification.Builder(getApplicationContext())
+                .setContentTitle("Your plant needs water").setContentText(flower.getName())
+                .setContentIntent(pIntent)
+                .setSmallIcon(R.drawable.ic_menu_add).getNotification();
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        notificationManager.notify(id, notification);
+
     }
 
     public static void setServiceAlarm(Context context, boolean isOn) {
@@ -138,15 +152,13 @@ public class NotificationService extends IntentService {
 
 
 
-    private boolean checkHour(Date date) {
+    private boolean checkHour(Date date, String stringHour1, String stringHour2) {
         try {
-            String string1 = "08:00:00";
-            Date time1 = new SimpleDateFormat("HH:mm:ss").parse(string1);
+            Date time1 = new SimpleDateFormat("HH:mm:ss").parse(stringHour1);
             Calendar calendar1 = Calendar.getInstance();
             calendar1.setTime(time1);
 
-            String string2 = "24:00:00";
-            Date time2 = new SimpleDateFormat("HH:mm:ss").parse(string2);
+            Date time2 = new SimpleDateFormat("HH:mm:ss").parse(stringHour2);
             Calendar calendar2 = Calendar.getInstance();
             calendar2.setTime(time2);
             calendar2.add(Calendar.DATE, 1);
