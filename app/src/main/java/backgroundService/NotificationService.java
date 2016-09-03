@@ -38,7 +38,7 @@ public class NotificationService extends IntentService {
     private static final String TAG = "NotificationService";
     private static boolean isNotificationSend = true;
 
-    private static final int CHECK_INTERVAL = 1000 * 20; //1000 * 60 * 15; // 60 seconds *10 //sprawdzanie co 15 min
+    private static final int CHECK_INTERVAL = /*1000 * 20;*/ 1000 * 60 * 15; // 60 seconds *10 //sprawdzanie co 15 min
 
     public static Intent newIntent(Context context) {
         return new Intent(context, NotificationService.class);
@@ -55,7 +55,7 @@ public class NotificationService extends IntentService {
         Date currentDate = new Date();
         LocalizationLab localizationLab = LocalizationLab.get(this);
 
-        if(checkHour(new Date(), "01:00:00", "02:00:00")) {
+       if(checkHour("01:00:00", "02:00:00", currentDate)) {
             isNotificationSend = false;
         }
 
@@ -64,18 +64,18 @@ public class NotificationService extends IntentService {
             int id = 0;
             for (Flower flower : flowers) {
                 if (removeTime(flower.getEndDate()).equals(removeTime(currentDate))) {
-                    if (checkHour(currentDate, "09:00:00", "21:00:00")) {
-                        List<Localization> loc = localizationLab.getLocalizations();
-                        Localization localization = loc.get(0);
-                        if(localization != null) {
-                            if(checkLocalization(localization.getLatitude(), localization.getLongitude())) {
-                                performNotification(id, flower);
-                                id++;
-                                isNotificationSend = true;
-                                updateFlower(flower);
+                        if (checkHour("09:00:00", "21:00:00", currentDate)) {
+                            List<Localization> loc = localizationLab.getLocalizations();
+                            Localization localization = loc.get(0);
+                            if(localization != null) {
+                                if(checkLocalization(localization.getLatitude(), localization.getLongitude())) {
+                                    performNotification(id, flower);
+                                    id++;
+                                    isNotificationSend = true;
+                                    updateFlower(flower);
+                                }
                             }
                         }
-                    }
                 }
             }
         }
@@ -168,35 +168,49 @@ public class NotificationService extends IntentService {
     }
 
 
+    public static boolean checkHour(String initialTime, String finalTime, Date date) {
+        String reg = "^([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$";
 
-    private boolean checkHour(Date date, String stringHour1, String stringHour2) {
+        SimpleDateFormat localDateFormat = new SimpleDateFormat("HH:mm:ss");
+        String currentTime = localDateFormat.format(date);
+
         try {
-            Date time1 = new SimpleDateFormat("HH:mm:ss").parse(stringHour1);
-            Calendar calendar1 = Calendar.getInstance();
-            calendar1.setTime(time1);
+            if (initialTime.matches(reg) && finalTime.matches(reg) && currentTime.matches(reg)) {
+                boolean valid = false;
+                //Start Time
+                java.util.Date inTime = new SimpleDateFormat("HH:mm:ss").parse(initialTime);
+                Calendar calendar1 = Calendar.getInstance();
+                calendar1.setTime(inTime);
 
-            Date time2 = new SimpleDateFormat("HH:mm:ss").parse(stringHour2);
-            Calendar calendar2 = Calendar.getInstance();
-            calendar2.setTime(time2);
-            calendar2.add(Calendar.DATE, 1);
+                //Current Time
+                java.util.Date checkTime = new SimpleDateFormat("HH:mm:ss").parse(currentTime);
+                Calendar calendar3 = Calendar.getInstance();
+                calendar3.setTime(checkTime);
 
-            SimpleDateFormat localDateFormat = new SimpleDateFormat("HH:mm:ss");
+                //End Time
+                java.util.Date finTime = new SimpleDateFormat("HH:mm:ss").parse(finalTime);
+                Calendar calendar2 = Calendar.getInstance();
+                calendar2.setTime(finTime);
 
-            String currentTime = localDateFormat.format(date);
+                if (finalTime.compareTo(initialTime) < 0) {
+                    calendar2.add(Calendar.DATE, 1);
+                    calendar3.add(Calendar.DATE, 1);
+                }
 
-            Date d = new SimpleDateFormat("HH:mm:ss").parse(currentTime);
-            Calendar calendar3 = Calendar.getInstance();
-            calendar3.setTime(d);
-            calendar3.add(Calendar.DATE, 1);
-
-            Date x = calendar3.getTime();
-            if (x.after(calendar1.getTime()) && x.before(calendar2.getTime())) {
-                return true;
+                java.util.Date actualTime = calendar3.getTime();
+                if ((actualTime.after(calendar1.getTime()) || actualTime.compareTo(calendar1.getTime()) == 0)
+                        && actualTime.before(calendar2.getTime())) {
+                    valid = true;
+                }
+                return valid;
+            } else {
+                throw new IllegalArgumentException("Not a valid time, expecting HH:MM:SS format");
             }
-        } catch (ParseException e) {
+        } catch(ParseException e) {
             e.printStackTrace();
         }
         return false;
+
     }
 
     private Date parseDate(String date, String format)
