@@ -10,7 +10,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
@@ -40,6 +42,14 @@ public class NotificationService extends IntentService {
 
     private static final int CHECK_INTERVAL = /*1000 * 20;*/ 1000 * 60 * 15; // 60 seconds *10 //sprawdzanie co 15 min
 
+    private static final long LOCATION_REFRESH_TIME = 1000 * 60 * 15;
+
+    private static final long LOCATION_REFRESH_DISTANCE = 200;
+
+    private LocationManager locationManager;
+
+    Location locationGPS = null;
+
     public static Intent newIntent(Context context) {
         return new Intent(context, NotificationService.class);
     }
@@ -55,7 +65,7 @@ public class NotificationService extends IntentService {
         Date currentDate = new Date();
         LocalizationLab localizationLab = LocalizationLab.get(this);
 
-       if(checkHour("01:00:00", "02:00:00", currentDate)) {
+        if (checkHour("01:00:00", "02:00:00", currentDate)) {
             isNotificationSend = false;
         }
 
@@ -64,18 +74,18 @@ public class NotificationService extends IntentService {
             int id = 0;
             for (Flower flower : flowers) {
                 if (removeTime(flower.getEndDate()).equals(removeTime(currentDate))) {
-                        if (checkHour("09:00:00", "21:00:00", currentDate)) {
-                            List<Localization> loc = localizationLab.getLocalizations();
-                            Localization localization = loc.get(0);
-                            if(localization != null) {
-                                if(checkLocalization(localization.getLatitude(), localization.getLongitude())) {
-                                    performNotification(id, flower);
-                                    id++;
-                                    isNotificationSend = true;
-                                    updateFlower(flower);
-                                }
+                    if (checkHour("09:00:00", "21:00:00", currentDate)) {
+                        List<Localization> loc = localizationLab.getLocalizations();
+                        Localization localization = loc.get(0);
+                        if (localization != null) {
+                            if (checkLocalization(localization.getLatitude(), localization.getLongitude())) {
+                                performNotification(id, flower);
+                                id++;
+                                isNotificationSend = true;
+                                updateFlower(flower);
                             }
                         }
+                    }
                 }
             }
         }
@@ -86,8 +96,8 @@ public class NotificationService extends IntentService {
         flower.setEndDate(addDays(flower.getStartDate(), Integer.valueOf(String.valueOf(flower.getDays()))));
         FlowerLab.get(this).updateFlower(flower);
     }
-    public static Date addDays(Date date, int days)
-    {
+
+    public static Date addDays(Date date, int days) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Calendar c = Calendar.getInstance();
         c.setTime(date);
@@ -140,18 +150,76 @@ public class NotificationService extends IntentService {
 
 
     public boolean checkLocalization(double latitude, double longitude) {
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return false;
         }
-        Location locationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        float distance = calculateDistance(latitude, longitude, locationGPS.getLatitude(), locationGPS.getLongitude());
-        if(distance > 40) {
+        /*Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+        String provider = locationManager.getBestProvider(criteria, true);
+        Intent intent = new Intent(this, FlowerListActivity.class);
+        PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
+        locationManager.requestLocationUpdates(provider, 0, 0, pIntent); */
+        //Location locationGPS = getLastKnownLocation();//locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);*/
+
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,
+                LOCATION_REFRESH_DISTANCE, mLocationListener);
+
+        float distance = 100;
+        if (locationGPS != null) {
+            distance = calculateDistance(latitude, longitude, locationGPS.getLatitude(), locationGPS.getLongitude());
+        }
+
+        if (distance > 50) {
             return false;
         }
         return true;
     }
+
+    private Location getLastKnownLocation() {
+        locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
+        List<String> providers = locationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return null;
+            }
+            Location l = locationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                bestLocation = l;
+            }
+        }
+        return bestLocation;
+    }
+
+    private final LocationListener mLocationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(final Location location) {
+            locationGPS = location;
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+
+    };
 
 
     private static float calculateDistance(double latitude1, double longitude1, double latitude2, double longitude2) {
